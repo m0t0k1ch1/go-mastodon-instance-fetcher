@@ -1,7 +1,0 @@
-package: github.com/m0t0k1ch1/gomif
-import:
-- package: github.com/jmespath/go-jmespath
-testImport:
-- package: github.com/stretchr/testify
-  subpackage:
-  - assert
