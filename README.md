@@ -35,3 +35,18 @@ func main() {
 	fmt.Println(string(instanceBytes))
 }
 ```
+
+``` json
+{
+  "name": "mastodon.m0t0k1ch1.com",
+  "uptime": 99.3801652892562,
+  "up": true,
+  "https_score": 100,
+  "https_rank": "A+",
+  "ipv6": true,
+  "openRegistrations": false,
+  "users": 1,
+  "statuses": 11,
+  "connections": 12
+}
+```
