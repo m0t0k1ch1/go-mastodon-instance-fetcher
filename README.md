@@ -6,7 +6,28 @@ GO Mastodon Instance status Fetcher
 
 a package for fetching [Mastodon](https://github.com/tootsuite/mastodon) instance status
 
-## Example
+## Examples
+
+### Use as CLI
+
+``` sh
+$ go get -u github.com/m0t0k1ch1/gomif/cmd/gomif
+$ gomif -i mastodon.m0t0k1ch1.com | jq .
+{
+  "date": 1492689362,
+  "up": true,
+  "users": 1,
+  "statuses": 15,
+  "connections": 17,
+  "openRegistrations": false,
+  "uptime": 0.9946714031971581,
+  "https_rank": "A+",
+  "https_score": 100,
+  "ipv6": true
+}
+```
+
+### Use in code
 
 ``` go
 package main
