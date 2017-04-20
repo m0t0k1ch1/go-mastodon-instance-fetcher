@@ -52,7 +52,7 @@ func (client *Client) SetUri(uri string) {
 	client.uri = uri
 }
 
-func (client *Client) FetchInstanceByName(ctx context.Context, name string) (*InstanceStatus, error) {
+func (client *Client) FetchLastInstanceStatusByName(ctx context.Context, name string) (*InstanceStatus, error) {
 	now := time.Now().Unix()
 
 	v := url.Values{}

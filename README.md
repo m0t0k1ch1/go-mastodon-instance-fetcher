@@ -25,7 +25,7 @@ func main() {
 
 	ctx := context.Background()
 
-	instance, err := client.FetchInstanceByName(ctx, "mastodon.m0t0k1ch1.com")
+	instance, err := client.FetchLastInstanceStatusByName(ctx, "mastodon.m0t0k1ch1.com")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,15 +41,15 @@ func main() {
 
 ``` json
 {
-  "name": "mastodon.m0t0k1ch1.com",
-  "uptime": 99.40828402366864,
+  "date": 1492688462,
   "up": true,
-  "https_score": 100,
-  "https_rank": "A+",
-  "ipv6": true,
-  "openRegistrations": false,
   "users": 1,
-  "statuses": 13,
-  "connections": 14
+  "statuses": 15,
+  "connections": 15,
+  "openRegistrations": false,
+  "uptime": 0.994535519125683,
+  "https_rank": "A+",
+  "https_score": 100,
+  "ipv6": true
 }
 ```
