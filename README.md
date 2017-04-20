@@ -23,31 +23,33 @@ import (
 func main() {
 	client := gomif.NewClient()
 
-	ctx := context.Background()
-
-	instance, err := client.FetchLastInstanceStatusByName(ctx, "mastodon.m0t0k1ch1.com")
+	status, err := client.FetchLastInstanceStatus(
+		context.Background(),
+		"mastodon.m0t0k1ch1.com",
+		3600, // span (sec)
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	instanceBytes, err := json.Marshal(instance)
+	b, err := json.Marshal(status)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(instanceBytes))
+	fmt.Println(string(b))
 }
 ```
 
 ``` json
 {
-  "date": 1492688462,
+  "date": 1492689362,
   "up": true,
   "users": 1,
   "statuses": 15,
-  "connections": 15,
+  "connections": 17,
   "openRegistrations": false,
-  "uptime": 0.994535519125683,
+  "uptime": 0.9946714031971581,
   "https_rank": "A+",
   "https_score": 100,
   "ipv6": true

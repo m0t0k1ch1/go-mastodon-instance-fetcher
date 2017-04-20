@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -17,10 +16,8 @@ const (
 )
 
 var (
-	span = 3600 // sec
-
 	ErrFailedToFetchInstances = errors.New("failed to fetch instances")
-	ErrNoInstanceStatus       = errors.New(fmt.Sprintf("no instance status in last %d seconds", span))
+	ErrNoInstanceStatus       = errors.New("no instance status")
 )
 
 type InstanceStatus struct {
@@ -52,13 +49,11 @@ func (client *Client) SetUri(uri string) {
 	client.uri = uri
 }
 
-func (client *Client) FetchLastInstanceStatusByName(ctx context.Context, name string) (*InstanceStatus, error) {
-	now := time.Now().Unix()
-
+func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, start, end int64) ([]*InstanceStatus, error) {
 	v := url.Values{}
 	v.Add("instance", name)
-	v.Add("start", strconv.FormatInt(now-int64(span), 10))
-	v.Add("end", strconv.FormatInt(now, 10))
+	v.Add("start", strconv.FormatInt(start, 10))
+	v.Add("end", strconv.FormatInt(end, 10))
 
 	req, err := http.NewRequest("GET", client.uri, nil)
 	if err != nil {
@@ -84,6 +79,17 @@ func (client *Client) FetchLastInstanceStatusByName(ctx context.Context, name st
 
 	var statuses []*InstanceStatus
 	if err := json.Unmarshal(b, &statuses); err != nil {
+		return nil, err
+	}
+
+	return statuses, nil
+}
+
+func (client *Client) FetchLastInstanceStatus(ctx context.Context, name string, span int64) (*InstanceStatus, error) {
+	now := time.Now().Unix()
+
+	statuses, err := client.FetchInstanceStatuses(ctx, name, now-span, now)
+	if err != nil {
 		return nil, err
 	}
 	if len(statuses) == 0 {
