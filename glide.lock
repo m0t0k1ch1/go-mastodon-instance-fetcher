@@ -1,0 +1,6 @@
+hash: 8f40c2483a92d708bf46b55f080b27535a2b2c9039c52f70ba921c9e9e94e825
+updated: 2017-04-20T18:51:30.2666188+09:00
+imports:
+- name: github.com/jmespath/go-jmespath
+  version: 3433f3ea46d9f8019119e7dd41274e112a2359a9
+testImports: []
