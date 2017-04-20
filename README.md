@@ -12,6 +12,7 @@ a package for fetching [Mastodon](https://github.com/tootsuite/mastodon) instanc
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -41,14 +42,14 @@ func main() {
 ``` json
 {
   "name": "mastodon.m0t0k1ch1.com",
-  "uptime": 99.3801652892562,
+  "uptime": 99.40828402366864,
   "up": true,
   "https_score": 100,
   "https_rank": "A+",
   "ipv6": true,
   "openRegistrations": false,
   "users": 1,
-  "statuses": 11,
-  "connections": 12
+  "statuses": 13,
+  "connections": 14
 }
 ```
