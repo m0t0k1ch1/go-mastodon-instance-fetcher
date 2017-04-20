@@ -7,18 +7,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	jmespath "github.com/jmespath/go-jmespath"
+	"net/url"
+	"strconv"
+	"time"
 )
 
 const (
-	DefaultUri = "https://instances.mastodon.xyz/instances.json"
+	DefaultUri = "https://instances.mastodon.xyz/api/instances/history.json"
 )
 
 var (
-	ErrFailedToFetchInstances  = errors.New("failed to fetch instances")
-	ErrFailedToExtractInstance = errors.New("failed to extract instance")
+	span = 3600 // sec
+
+	ErrFailedToFetchInstances = errors.New("failed to fetch instances")
+	ErrNoInstanceStatus       = errors.New(fmt.Sprintf("no instance status in last %d seconds", span))
 )
+
+type InstanceStatus struct {
+	Date              int64   `json:"date"`
+	Up                bool    `json:"up"`
+	Users             int     `json:"users"`
+	Statuses          int     `json:"statuses"`
+	Connections       int     `json:"connections"`
+	OpenRegistrations bool    `json:"openRegistrations"`
+	Uptime            float64 `json:"uptime"`
+	HttpsRank         string  `json:"https_rank"`
+	HttpsScore        float64 `json:"https_score"`
+	IPv6              bool    `json:"ipv6"`
+}
 
 type Client struct {
 	httpClient *http.Client
@@ -36,11 +52,19 @@ func (client *Client) SetUri(uri string) {
 	client.uri = uri
 }
 
-func (client *Client) FetchInstances(ctx context.Context) ([]*Instance, error) {
+func (client *Client) FetchInstanceByName(ctx context.Context, name string) (*InstanceStatus, error) {
+	now := time.Now().Unix()
+
+	v := url.Values{}
+	v.Add("instance", name)
+	v.Add("start", strconv.FormatInt(now-int64(span), 10))
+	v.Add("end", strconv.FormatInt(now, 10))
+
 	req, err := http.NewRequest("GET", client.uri, nil)
 	if err != nil {
 		return nil, err
 	}
+	req.URL.RawQuery = v.Encode()
 	req.WithContext(ctx)
 
 	res, err := client.httpClient.Do(req)
@@ -58,34 +82,13 @@ func (client *Client) FetchInstances(ctx context.Context) ([]*Instance, error) {
 		return nil, err
 	}
 
-	var instances []*Instance
-	if err := json.Unmarshal(b, &instances); err != nil {
+	var statuses []*InstanceStatus
+	if err := json.Unmarshal(b, &statuses); err != nil {
 		return nil, err
 	}
-
-	return instances, nil
-}
-
-func (client *Client) FetchInstanceByName(ctx context.Context, name string) (*Instance, error) {
-	instances, err := client.FetchInstances(ctx)
-	if err != nil {
-		return nil, err
+	if len(statuses) == 0 {
+		return nil, ErrNoInstanceStatus
 	}
 
-	j, err := jmespath.Compile(fmt.Sprintf("[?name=='%s'] | [0]", name))
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := j.Search(instances)
-	if err != nil {
-		return nil, err
-	}
-
-	instance, ok := result.(*Instance)
-	if !ok {
-		return nil, ErrFailedToExtractInstance
-	}
-
-	return instance, nil
+	return statuses[len(statuses)-1], nil
 }
