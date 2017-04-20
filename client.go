@@ -16,8 +16,9 @@ const (
 )
 
 var (
-	ErrFailedToFetchInstances = errors.New("failed to fetch instances")
-	ErrNoInstanceStatus       = errors.New("no instance status")
+	ErrInstanceNotFound            = errors.New("instance not found")
+	ErrFailedToFetchInstanceStatus = errors.New("failed to fetch instanceStatus")
+	ErrNoInstanceStatus            = errors.New("no instance status")
 )
 
 type InstanceStatus struct {
@@ -69,7 +70,10 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrFailedToFetchInstances
+		if res.StatusCode == http.StatusNotFound {
+			return nil, ErrInstanceNotFound
+		}
+		return nil, ErrFailedToFetchInstanceStatus
 	}
 
 	b, err := ioutil.ReadAll(res.Body)
