@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	jmespath "github.com/jmespath/go-jmespath"
 )
 
 const (
-	DefaultUri     = "https://instances.mastodon.xyz/instances.json"
-	DefaultTimeout = 5 // sec
+	DefaultUri = "https://instances.mastodon.xyz/instances.json"
 )
 
 var (
@@ -25,7 +23,6 @@ var (
 type Client struct {
 	httpClient *http.Client
 	uri        string
-	timeout    time.Duration // sec
 }
 
 type Instance struct {
@@ -45,7 +42,6 @@ func NewClient() *Client {
 	return &Client{
 		httpClient: &http.Client{},
 		uri:        DefaultUri,
-		timeout:    DefaultTimeout,
 	}
 }
 
@@ -53,14 +49,7 @@ func (client *Client) SetUri(uri string) {
 	client.uri = uri
 }
 
-func (client *Client) SetTimeout(timeout time.Duration) {
-	client.timeout = timeout
-}
-
-func (client *Client) FetchInstances() ([]*Instance, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), client.timeout*time.Second)
-	defer cancel()
-
+func (client *Client) FetchInstances(ctx context.Context) ([]*Instance, error) {
 	req, err := http.NewRequest("GET", client.uri, nil)
 	if err != nil {
 		return nil, err
@@ -90,8 +79,8 @@ func (client *Client) FetchInstances() ([]*Instance, error) {
 	return instances, nil
 }
 
-func (client *Client) FetchInstanceByName(name string) (*Instance, error) {
-	instances, err := client.FetchInstances()
+func (client *Client) FetchInstanceByName(ctx context.Context, name string) (*Instance, error) {
+	instances, err := client.FetchInstances(ctx)
 	if err != nil {
 		return nil, err
 	}

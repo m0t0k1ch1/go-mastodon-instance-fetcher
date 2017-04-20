@@ -1,12 +1,15 @@
 package gomif
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestFetchInstanceByName(t *testing.T) {
 	name := "mastodon.m0t0k1ch1.com"
 
 	client := NewClient()
-	instance, err := client.FetchInstanceByName(name)
+	instance, err := client.FetchInstanceByName(context.Background(), name)
 	if err != nil {
 		t.Fatal("failed to fetch instance")
 	}

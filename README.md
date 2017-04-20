@@ -22,7 +22,9 @@ import (
 func main() {
 	client := gomif.NewClient()
 
-	instance, err := client.FetchInstanceByName("mastodon.m0t0k1ch1.com")
+	ctx := context.Background()
+
+	instance, err := client.FetchInstanceByName(ctx, "mastodon.m0t0k1ch1.com")
 	if err != nil {
 		log.Fatal(err)
 	}
