@@ -41,7 +41,7 @@ func TestFetchLastInstanceStatus(t *testing.T) {
 
 	status, err := client.FetchLastInstanceStatus(context.Background(), "mastodon.m0t0k1ch1.com", 3600)
 	if err != nil {
-		t.Fatal("failed to fetch instance status")
+		t.Fatalf("should not be fail: %v", err)
 	}
 	if status.Date != expected.Date {
 		t.Errorf("want %d but %d", expected.Date, status.Date)
