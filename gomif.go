@@ -40,20 +40,20 @@ type Config struct {
 
 type Client struct {
 	*http.Client
-	Config *Config
+	config *Config
 }
 
 func NewClient() *Client {
 	return &Client{
 		Client: http.DefaultClient,
-		Config: &Config{
+		config: &Config{
 			Uri: DefaultUri,
 		},
 	}
 }
 
 func (client *Client) SetUri(uri string) {
-	client.Config.Uri = uri
+	client.config.Uri = uri
 }
 
 func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, start, end int64) ([]*InstanceStatus, error) {
@@ -62,7 +62,7 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 	v.Add("start", strconv.FormatInt(start, 10))
 	v.Add("end", strconv.FormatInt(end, 10))
 
-	req, err := http.NewRequest("GET", client.Config.Uri, nil)
+	req, err := http.NewRequest("GET", client.config.Uri, nil)
 	if err != nil {
 		return nil, err
 	}
