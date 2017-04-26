@@ -62,7 +62,7 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 	v.Add("start", strconv.FormatInt(start, 10))
 	v.Add("end", strconv.FormatInt(end, 10))
 
-	req, err := http.NewRequest("GET", client.config.Uri, nil)
+	req, err := http.NewRequest(http.MethodGet, client.config.Uri, nil)
 	if err != nil {
 		return nil, err
 	}
