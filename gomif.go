@@ -34,20 +34,26 @@ type InstanceStatus struct {
 	IPv6              bool    `json:"ipv6"`
 }
 
+type config struct {
+	uri string
+}
+
 type Client struct {
-	httpClient *http.Client
-	uri        string
+	*http.Client
+	config *config
 }
 
 func NewClient() *Client {
 	return &Client{
-		httpClient: &http.Client{},
-		uri:        DefaultUri,
+		Client: http.DefaultClient,
+		config: &config{
+			uri: DefaultUri,
+		},
 	}
 }
 
 func (client *Client) SetUri(uri string) {
-	client.uri = uri
+	client.config.uri = uri
 }
 
 func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, start, end int64) ([]*InstanceStatus, error) {
@@ -56,14 +62,14 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 	v.Add("start", strconv.FormatInt(start, 10))
 	v.Add("end", strconv.FormatInt(end, 10))
 
-	req, err := http.NewRequest("GET", client.uri, nil)
+	req, err := http.NewRequest("GET", client.config.uri, nil)
 	if err != nil {
 		return nil, err
 	}
 	req.URL.RawQuery = v.Encode()
 	req.WithContext(ctx)
 
-	res, err := client.httpClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
