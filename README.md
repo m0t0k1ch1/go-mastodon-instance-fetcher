@@ -12,6 +12,7 @@ GO [Mastodon](https://github.com/tootsuite/mastodon) Instance status Fetcher
 $ go get -u github.com/m0t0k1ch1/gomif/cmd/gomif
 $ gomif -i mastodon.m0t0k1ch1.com | jq .
 {
+  "instance_name": "mastodon.m0t0k1ch1.com",
   "date": 1492689362,
   "up": true,
   "users": 1,
@@ -62,6 +63,7 @@ func main() {
 
 ``` json
 {
+  "instance_name": "mastodon.m0t0k1ch1.com",
   "date": 1492689362,
   "up": true,
   "users": 1,
