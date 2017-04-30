@@ -22,6 +22,7 @@ var (
 )
 
 type InstanceStatus struct {
+	InstanceName      string  `json:"instance_name"`
 	Date              int64   `json:"date"`
 	Up                bool    `json:"up"`
 	Users             int     `json:"users"`
@@ -98,7 +99,13 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 		return nil, err
 	}
 
-	return statuses, nil
+	namedStatuses := make([]*InstanceStatus, len(statuses))
+	for i, status := range statuses {
+		status.InstanceName = name
+		namedStatuses[i] = status
+	}
+
+	return namedStatuses, nil
 }
 
 func (client *Client) FetchLastInstanceStatus(ctx context.Context, name string, span int64) (*InstanceStatus, error) {

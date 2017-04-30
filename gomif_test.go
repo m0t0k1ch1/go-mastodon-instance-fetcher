@@ -10,6 +10,7 @@ import (
 
 func TestFetchLastInstanceStatus(t *testing.T) {
 	expected := &InstanceStatus{
+		InstanceName:      "mastodon.m0t0k1ch1.com",
 		Date:              1492686962,
 		Up:                true,
 		Users:             1,
@@ -39,9 +40,12 @@ func TestFetchLastInstanceStatus(t *testing.T) {
 	client := NewClient()
 	client.SetUri(ts.URL)
 
-	status, err := client.FetchLastInstanceStatus(context.Background(), "mastodon.m0t0k1ch1.com", 3600)
+	status, err := client.FetchLastInstanceStatus(context.Background(), expected.InstanceName, 3600)
 	if err != nil {
 		t.Fatalf("should not be fail: %v", err)
+	}
+	if status.InstanceName != expected.InstanceName {
+		t.Errorf("want %q but %q", expected.InstanceName, status.InstanceName)
 	}
 	if status.Date != expected.Date {
 		t.Errorf("want %d but %d", expected.Date, status.Date)
