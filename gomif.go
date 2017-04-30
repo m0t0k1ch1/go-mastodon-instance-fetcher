@@ -35,7 +35,7 @@ type InstanceStatus struct {
 }
 
 type Config struct {
-	Uri *url.URL
+	Uri string
 }
 
 type Client struct {
@@ -44,36 +44,32 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	u, _ := url.Parse(DefaultUri)
-
 	return &Client{
 		Client: http.DefaultClient,
 		config: &Config{
-			Uri: u,
+			Uri: DefaultUri,
 		},
 	}
 }
 
-func (client *Client) SetUri(uri string) error {
-	u, err := url.Parse(uri)
-	if err != nil {
-		return err
-	}
-
-	client.config.Uri = u
-
-	return nil
+func (client *Client) SetUri(uri string) {
+	client.config.Uri = uri
 }
 
 func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, start, end int64) ([]*InstanceStatus, error) {
+	u, err := url.Parse(client.config.Uri)
+	if err != nil {
+		return nil, err
+	}
+
 	v := url.Values{}
 	v.Add("instance", name)
 	v.Add("start", strconv.FormatInt(start, 10))
 	v.Add("end", strconv.FormatInt(end, 10))
 
-	client.config.Uri.RawQuery = v.Encode()
+	u.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, client.config.Uri.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
