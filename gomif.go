@@ -3,40 +3,52 @@ package gomif
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 )
 
 const (
-	DefaultUri = "https://instances.mastodon.xyz/api/instances/history.json"
+	DefaultUri = "https://instances.social/api/1.0/instances/show"
 )
 
-var (
-	ErrInstanceNotFound            = errors.New("instance not found")
-	ErrFailedToFetchInstanceStatus = errors.New("failed to fetch instanceStatus")
-	ErrNoInstanceStatus            = errors.New("no instance status")
-)
+type InstanceInformation struct {
+	Id                string    `json:"id"`
+	Name              string    `json:"name"`
+	AddedAt           time.Time `json:"added_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	CheckedAt         time.Time `json:"checked_at"`
+	Uptime            float64   `json:"uptime"`
+	Up                bool      `json:"up"`
+	Dead              bool      `json:"dead"`
+	Version           string    `json:"version"`
+	Ipv6              bool      `json:"ipv6"`
+	HttpsScore        int       `json:"https_score"`
+	HttpsRank         string    `json:"https_rank"`
+	ObsScore          int       `json:"obs_score"`
+	ObsRank           string    `json:"obs_rank"`
+	Users             int       `json:"users"`
+	Statuses          int       `json:"statuses"`
+	Connections       int       `json:"connections"`
+	OpenRegistrations bool      `json:"open_registrations"`
+	Thumbnail         string    `json:"thumbnail"`
+	ThumbnailProxy    string    `json:"thumbnail_proxy"`
+	ActiveUsers       int       `json:"active_users"`
+}
 
-type InstanceStatus struct {
-	InstanceName      string  `json:"instance_name"`
-	Date              int64   `json:"date"`
-	Up                bool    `json:"up"`
-	Users             int     `json:"users"`
-	Statuses          int     `json:"statuses"`
-	Connections       int     `json:"connections"`
-	OpenRegistrations bool    `json:"openRegistrations"`
-	Uptime            float64 `json:"uptime"`
-	HttpsRank         string  `json:"https_rank"`
-	HttpsScore        float64 `json:"https_score"`
-	IPv6              bool    `json:"ipv6"`
+type ErrorResponse struct {
+	Error *Error `json:"error"`
+}
+
+type Error struct {
+	Message string `json:"message"`
 }
 
 type Config struct {
-	Uri string
+	Uri   string
+	Token string
 }
 
 type Client struct {
@@ -44,11 +56,12 @@ type Client struct {
 	config *Config
 }
 
-func NewClient() *Client {
+func NewClient(token string) *Client {
 	return &Client{
 		Client: http.DefaultClient,
 		config: &Config{
-			Uri: DefaultUri,
+			Uri:   DefaultUri,
+			Token: token,
 		},
 	}
 }
@@ -57,16 +70,14 @@ func (client *Client) SetUri(uri string) {
 	client.config.Uri = uri
 }
 
-func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, start, end int64) ([]*InstanceStatus, error) {
+func (client *Client) FetchInstanceInformation(ctx context.Context, name string) (*InstanceInformation, error) {
 	u, err := url.Parse(client.config.Uri)
 	if err != nil {
 		return nil, err
 	}
 
 	v := url.Values{}
-	v.Add("instance", name)
-	v.Add("start", strconv.FormatInt(start, 10))
-	v.Add("end", strconv.FormatInt(end, 10))
+	v.Add("name", name)
 
 	u.RawQuery = v.Encode()
 
@@ -75,6 +86,7 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 		return nil, err
 	}
 	req.WithContext(ctx)
+	req.Header.Set("Authorization", "Bearer "+client.config.Token)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -82,42 +94,23 @@ func (client *Client) FetchInstanceStatuses(ctx context.Context, name string, st
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		if res.StatusCode == http.StatusNotFound {
-			return nil, ErrInstanceNotFound
-		}
-		return nil, ErrFailedToFetchInstanceStatus
-	}
-
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	var statuses []*InstanceStatus
-	if err := json.Unmarshal(b, &statuses); err != nil {
+	if res.StatusCode != http.StatusOK {
+		var resp ErrorResponse
+		if err := json.Unmarshal(b, &resp); err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf(resp.Error.Message)
+	}
+
+	var info InstanceInformation
+	if err := json.Unmarshal(b, &info); err != nil {
 		return nil, err
 	}
 
-	namedStatuses := make([]*InstanceStatus, len(statuses))
-	for i, status := range statuses {
-		status.InstanceName = name
-		namedStatuses[i] = status
-	}
-
-	return namedStatuses, nil
-}
-
-func (client *Client) FetchLastInstanceStatus(ctx context.Context, name string, span int64) (*InstanceStatus, error) {
-	now := time.Now().Unix()
-
-	statuses, err := client.FetchInstanceStatuses(ctx, name, now-span, now)
-	if err != nil {
-		return nil, err
-	}
-	if len(statuses) == 0 {
-		return nil, ErrNoInstanceStatus
-	}
-
-	return statuses[len(statuses)-1], nil
+	return &info, nil
 }
