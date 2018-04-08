@@ -2,28 +2,17 @@
 
 [![GoDoc](https://godoc.org/github.com/m0t0k1ch1/gomif?status.svg)](https://godoc.org/github.com/m0t0k1ch1/gomif) [![wercker status](https://app.wercker.com/status/3ed695cdfed9a63dd66b823302604041/s/master "wercker status")](https://app.wercker.com/project/byKey/3ed695cdfed9a63dd66b823302604041)
 
-GO [Mastodon](https://github.com/tootsuite/mastodon) Instance status Fetcher
+GO [Mastodon](https://github.com/tootsuite/mastodon) Instance information Fetcher
 
 ## Examples
+
+First you need to [get a instances.social API token](https://instances.social/api/token).
 
 ### Use as CLI
 
 ``` sh
 $ go get -u github.com/m0t0k1ch1/gomif/cmd/gomif
-$ gomif -i mastodon.m0t0k1ch1.com | jq .
-{
-  "instance_name": "mastodon.m0t0k1ch1.com",
-  "date": 1492689362,
-  "up": true,
-  "users": 1,
-  "statuses": 15,
-  "connections": 17,
-  "openRegistrations": false,
-  "uptime": 0.9946714031971581,
-  "https_rank": "A+",
-  "https_score": 100,
-  "ipv6": true
-}
+$ GOMIF_TOKEN=<your token> gomif -i mastodon.m0t0k1ch1.com
 ```
 
 ### Use in code
@@ -41,38 +30,21 @@ import (
 )
 
 func main() {
-	client := gomif.NewClient()
+	client := gomif.NewClient("your token")
 
-	status, err := client.FetchLastInstanceStatus(
+	info, err := client.FetchInstanceInformation(
 		context.Background(),
 		"mastodon.m0t0k1ch1.com",
-		3600, // span (sec)
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	b, err := json.Marshal(status)
+	b, err := json.Marshal(info)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println(string(b))
-}
-```
-
-``` json
-{
-  "instance_name": "mastodon.m0t0k1ch1.com",
-  "date": 1492689362,
-  "up": true,
-  "users": 1,
-  "statuses": 15,
-  "connections": 17,
-  "openRegistrations": false,
-  "uptime": 0.9946714031971581,
-  "https_rank": "A+",
-  "https_score": 100,
-  "ipv6": true
 }
 ```

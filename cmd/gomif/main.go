@@ -6,14 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/m0t0k1ch1/gomif"
 )
 
 const (
-	DefaultSpan    = 3600
-	DefaultTimeout = 5 // sec
+	GomifTokenKey = "GOMIF_TOKEN"
 )
 
 func main() {
@@ -21,55 +19,37 @@ func main() {
 }
 
 func run() int {
-	var (
-		instance string
-		span     int
-		timeout  int
-	)
+	var instance string
 
 	flag.StringVar(&instance, "instance", "", "instance name")
 	flag.StringVar(&instance, "i", "", "instance name")
-	flag.IntVar(&span, "span", DefaultSpan, "time period for fetching instance status")
-	flag.IntVar(&timeout, "timeout", DefaultTimeout, "HTTP request timeout (sec)")
 	flag.Parse()
 
 	if len(instance) == 0 {
-		fmt.Println("instance name is not specified")
-		return 1
+		return fail(fmt.Errorf("instance name is not specified"))
 	}
 
-	client := gomif.NewClient()
+	client := gomif.NewClient(os.Getenv(GomifTokenKey))
 
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	statusCh := make(chan *gomif.InstanceStatus, 1)
-	errCh := make(chan error, 1)
-
-	go func() {
-		status, err := client.FetchLastInstanceStatus(ctx, instance, int64(span))
-		if err != nil {
-			errCh <- err
-			return
-		}
-		statusCh <- status
-	}()
-
-	select {
-	case status := <-statusCh:
-		b, err := json.Marshal(status)
-		if err != nil {
-			fmt.Println(err)
-			return 1
-		}
-		fmt.Println(string(b))
-		return 0
-	case err := <-errCh:
-		fmt.Println(err)
-		return 1
-	case <-ctx.Done():
-		fmt.Println(ctx.Err())
-		return 1
+	info, err := client.FetchInstanceInformation(context.Background(), instance)
+	if err != nil {
+		return fail(err)
 	}
+
+	b, err := json.Marshal(info)
+	if err != nil {
+		return fail(err)
+	}
+	fmt.Println(string(b))
+
+	return success()
+}
+
+func success() int {
+	return 0
+}
+
+func fail(err error) int {
+	fmt.Println(err)
+	return 1
 }
